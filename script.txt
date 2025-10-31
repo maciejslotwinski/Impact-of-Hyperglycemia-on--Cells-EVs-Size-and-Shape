@@ -19,7 +19,7 @@ def calculate_red_line_length_from_contours(image_path, show_debug=False, save_p
     mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
     red_mask = cv2.bitwise_or(mask1, mask2) #Cutting out the area of "mask1" and "mask2"
 
-    # Czyszczenie maski
+    # Cleaning the mask
     kernel = np.ones((3, 3), np.uint8)
     red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_CLOSE, kernel)
     red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, kernel)
@@ -41,18 +41,18 @@ def calculate_red_line_length_from_contours(image_path, show_debug=False, save_p
 
         line_lengths.append(length)
 
-        # Rysowanie prostokątów wokół linii
+        # Green overlay 
         box = cv2.boxPoints(rect)
         box = np.intp(box)
         cv2.drawContours(img, [box], 0, (0, 255, 0), 2)
 
-    # Grupowanie długości
+    # Lengths grouping
     grouped = Counter(line_lengths)
 
-    # Sortowanie po długości
+    # Sorting by lengths
     grouped_sorted = sorted(grouped.items())
 
-    print("\nDługości linii (posortowane):")
+    print("\nLine length (sorted):")
     total_lines = 0
     total_length = 0
     for length, count in grouped_sorted:
@@ -61,15 +61,13 @@ def calculate_red_line_length_from_contours(image_path, show_debug=False, save_p
         total_length += suma
         print(F"{length}, {count}")
 
-    print(f"\nŁączna liczba linii: {total_lines}")
-    print(f"Łączna długość linii: {total_length} px")
+    print(f"\nLines count: {total_lines}")
+    print(f"Total lines length: {total_length} px")
 
-    # Zapis poglądu
     if save_preview_path:
         cv2.imwrite(save_preview_path, img)
         print(f"Pogląd zapisany jako: {save_preview_path}")
 
-    # Podgląd
     if show_debug:
         cv2.imshow("Wykryte linie", img)
         cv2.waitKey(0)
@@ -77,9 +75,10 @@ def calculate_red_line_length_from_contours(image_path, show_debug=False, save_p
 
     return total_length, total_lines
 
-# Przykład użycia
+# Example of usage
 calculate_red_line_length_from_contours(
     image_path="zdj/N3_marked.jpg",
     show_debug=False,
     save_preview_path="N3.png"
+
 )
