@@ -1,0 +1,85 @@
+import cv2
+import numpy as np
+from collections import Counter
+
+def calculate_red_line_length_from_contours(image_path, show_debug=False, save_preview_path=None):
+    img = cv2.imread(image_path)
+    
+    #Converting the image from RGB to HSV colour scale (HSV scale is easier to read for scripts)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    # Setting the ranges of colour red in HSV scale (the lines due to used software are not uniform in colour)
+    lower_red1 = np.array([0, 70, 50])
+    upper_red1 = np.array([10, 255, 255])
+    lower_red2 = np.array([160, 70, 50])
+    upper_red2 = np.array([180, 255, 255])
+
+    # Creating a masks for colour red (a matrix is created with red pixels marked as "1")
+    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+    red_mask = cv2.bitwise_or(mask1, mask2) #Cutting out the area of "mask1" and "mask2"
+
+    # Czyszczenie maski
+    kernel = np.ones((3, 3), np.uint8)
+    red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_CLOSE, kernel)
+    red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, kernel)
+
+    # Contours
+    contours_info = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours_info[0] if len(contours_info) == 2 else contours_info[1]
+
+    # Collecting the lengths 
+    line_lengths = []
+
+    for cnt in contours:
+        rect = cv2.minAreaRect(cnt)
+        (x, y), (w, h) = rect[0], rect[1]
+        length = round(max(w, h))
+
+        if length < 20:
+            continue
+
+        line_lengths.append(length)
+
+        # Rysowanie prostokątów wokół linii
+        box = cv2.boxPoints(rect)
+        box = np.intp(box)
+        cv2.drawContours(img, [box], 0, (0, 255, 0), 2)
+
+    # Grupowanie długości
+    grouped = Counter(line_lengths)
+
+    # Sortowanie po długości
+    grouped_sorted = sorted(grouped.items())
+
+    print("\nDługości linii (posortowane):")
+    total_lines = 0
+    total_length = 0
+    for length, count in grouped_sorted:
+        suma = length * count
+        total_lines += count
+        total_length += suma
+        print(F"{length}, {count}")
+
+    print(f"\nŁączna liczba linii: {total_lines}")
+    print(f"Łączna długość linii: {total_length} px")
+
+    # Zapis poglądu
+    if save_preview_path:
+        cv2.imwrite(save_preview_path, img)
+        print(f"Pogląd zapisany jako: {save_preview_path}")
+
+    # Podgląd
+    if show_debug:
+        cv2.imshow("Wykryte linie", img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return total_length, total_lines
+
+# Przykład użycia
+calculate_red_line_length_from_contours(
+    image_path="zdj/N3_marked.jpg",
+    show_debug=False,
+    save_preview_path="N3.png"
+)
