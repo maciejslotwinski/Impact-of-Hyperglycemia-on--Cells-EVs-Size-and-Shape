@@ -31,6 +31,7 @@ def calculate_red_line_length_from_contours(image_path, show_debug=False, save_p
     # Collecting the lengths 
     line_lengths = []
 
+    #Assuming that longer side of a line  represents its length and setting minimal size for sEVs in pixels (30 nm). Appending detected lengths to the created   before list.
     for cnt in contours:
         rect = cv2.minAreaRect(cnt)
         (x, y), (w, h) = rect[0], rect[1]
@@ -52,6 +53,7 @@ def calculate_red_line_length_from_contours(image_path, show_debug=False, save_p
     # Sorting by lengths
     grouped_sorted = sorted(grouped.items())
 
+    #Calculating total count of lines and printing detected lengths.
     print("\nLine length (sorted):")
     total_lines = 0
     total_length = 0
@@ -63,13 +65,14 @@ def calculate_red_line_length_from_contours(image_path, show_debug=False, save_p
 
     print(f"\nLines count: {total_lines}")
     print(f"Total lines length: {total_length} px")
-
+   
+    #Showing preview of the obtained picture.
     if save_preview_path:
         cv2.imwrite(save_preview_path, img)
-        print(f"Pogląd zapisany jako: {save_preview_path}")
+        print(f"Preview saved as: {save_preview_path}")
 
     if show_debug:
-        cv2.imshow("Wykryte linie", img)
+        cv2.imshow("Detected lines", img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -82,3 +85,4 @@ calculate_red_line_length_from_contours(
     save_preview_path="N3.png"
 
 )
+
